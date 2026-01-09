@@ -1,46 +1,60 @@
-'use client';
+// App.tsx
+import React, { useState, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { ThemeContext } from './ThemeContext';
+import { Client, View } from './types';
+import { MOCK_CLIENTS } from './mockData';
+import { LoadingScreen } from './components/LoadingScreen';
+import { Sidebar } from './components/Sidebar';
+import { Header } from './components/Header';
+import { Dashboard } from './components/Dashboard';
+import { ClientsView } from './components/ClientsView';
+import { SettingsView } from './components/SettingsView';
+import { ClientModal } from './components/ClientModal';
+import { AddClientModal } from './components/AddClientModal';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Client } from '../types';
-import { mockClients } from '../data/mockClients';
-
-interface AppContextType {
-  clients: Client[];
-  addClient: (client: Omit<Client, 'id' | 'createdAt'>) => void;
-  updateClient: (id: string, client: Partial<Client>) => void;
-  deleteClient: (id: string) => void;
-}
-
-const AppContext = createContext<AppContextType | undefined>(undefined);
-
-export const useApp = () => {
-  const context = useContext(AppContext);
-  if (!context) throw new Error('useApp must be used within AppProvider');
-  return context;
-};
-
-export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export default function App() {
+  const [darkMode, setDarkMode] = useState(false);
   const [clients, setClients] = useState<Client[]>([]);
-  const [initialized, setInitialized] = useState(false);
+  const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'All' | Client['status']>('All');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [isAddingClient, setIsAddingClient] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Load data from localStorage or use mock data
   useEffect(() => {
-    const stored = localStorage.getItem('clientpilot-clients');
+    const stored = localStorage.getItem('clientpilot_clients');
+    const storedTheme = localStorage.getItem('clientpilot_theme');
     
-    if (stored) {
-      setClients(JSON.parse(stored));
-    } else {
-      setClients(mockClients);
-      localStorage.setItem('clientpilot-clients', JSON.stringify(mockClients));
+    if (storedTheme === 'dark') {
+      setDarkMode(true);
     }
     
-    setInitialized(true);
+    setTimeout(() => {
+      if (stored) {
+        setClients(JSON.parse(stored));
+      } else {
+        setClients(MOCK_CLIENTS);
+        localStorage.setItem('clientpilot_clients', JSON.stringify(MOCK_CLIENTS));
+      }
+      setIsLoading(false);
+    }, 800);
   }, []);
 
+  // Save to localStorage whenever clients change
   useEffect(() => {
-    if (initialized) {
-      localStorage.setItem('clientpilot-clients', JSON.stringify(clients));
+    if (clients.length > 0) {
+      localStorage.setItem('clientpilot_clients', JSON.stringify(clients));
     }
-  }, [clients, initialized]);
+  }, [clients]);
+
+  const toggleDarkMode = () => {
+    const newMode = !darkMode;
+    setDarkMode(newMode);
+    localStorage.setItem('clientpilot_theme', newMode ? 'dark' : 'light');
+  };
 
   const addClient = (client: Omit<Client, 'id' | 'createdAt'>) => {
     const newClient: Client = {
@@ -48,20 +62,96 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: Date.now().toString(),
       createdAt: new Date().toISOString()
     };
-    setClients(prev => [newClient, ...prev]);
+    setClients([newClient, ...clients]);
+    setIsAddingClient(false);
   };
 
-  const updateClient = (id: string, updates: Partial<Client>) => {
-    setClients(prev => prev.map(c => c.id === id ? { ...c, ...updates } : c));
+  const updateClient = (updatedClient: Client) => {
+    setClients(clients.map(c => c.id === updatedClient.id ? updatedClient : c));
+    setSelectedClient(updatedClient);
   };
 
   const deleteClient = (id: string) => {
-    setClients(prev => prev.filter(c => c.id !== id));
+    setClients(clients.filter(c => c.id !== id));
+    setSelectedClient(null);
+  };
+
+  const filteredClients = clients.filter(client => {
+    const matchesSearch = client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         client.company?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'All' || client.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const stats = {
+    total: clients.length,
+    active: clients.filter(c => c.status === 'Active').length,
+    leads: clients.filter(c => c.status === 'Lead').length,
+    completed: clients.filter(c => c.status === 'Completed').length
   };
 
   return (
-    <AppContext.Provider value={{ clients, addClient, updateClient, deleteClient }}>
-      {children}
-    </AppContext.Provider>
+    <ThemeContext.Provider value={{ darkMode, toggleDarkMode }}>
+      <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
+        {isLoading ? (
+          <LoadingScreen darkMode={darkMode} />
+        ) : (
+          <div className="flex h-screen overflow-hidden">
+            <Sidebar currentView={currentView} setCurrentView={setCurrentView} stats={stats} />
+            <main className="flex-1 overflow-y-auto">
+              <Header 
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                onAddClient={() => setIsAddingClient(true)}
+              />
+              <AnimatePresence mode="wait">
+                {currentView === 'dashboard' && (
+                  <Dashboard 
+                    key="dashboard"
+                    stats={stats}
+                    clients={clients}
+                    onViewClients={() => setCurrentView('clients')}
+                  />
+                )}
+                {currentView === 'clients' && (
+                  <ClientsView
+                    key="clients"
+                    clients={filteredClients}
+                    statusFilter={statusFilter}
+                    setStatusFilter={setStatusFilter}
+                    onSelectClient={setSelectedClient}
+                  />
+                )}
+                {currentView === 'settings' && (
+                  <SettingsView key="settings" />
+                )}
+              </AnimatePresence>
+            </main>
+          </div>
+        )}
+
+        {/* Client Details Modal */}
+        <AnimatePresence>
+          {selectedClient && (
+            <ClientModal
+              client={selectedClient}
+              onClose={() => setSelectedClient(null)}
+              onUpdate={updateClient}
+              onDelete={deleteClient}
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Add Client Modal */}
+        <AnimatePresence>
+          {isAddingClient && (
+            <AddClientModal
+              onClose={() => setIsAddingClient(false)}
+              onAdd={addClient}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    </ThemeContext.Provider>
   );
-};
+}
