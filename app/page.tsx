@@ -1,4 +1,4 @@
-import { AppProvider } from './components/AppProvider';
+import { AppProvider } from "./components/AppProvider";
 import { ClientPilot } from './components/ClientPilot';
 
 export default function Home() {

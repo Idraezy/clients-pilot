@@ -7,7 +7,7 @@ import { useApp } from './AppProvider';
 
 export const SettingsPage: React.FC = () => {
   const { clients } = useApp();
-
+  
   const handleExport = () => {
     const dataStr = JSON.stringify(clients, null, 2);
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
@@ -40,14 +40,11 @@ export const SettingsPage: React.FC = () => {
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-gray-900">Data Management</h2>
         </div>
-
         <div className="p-6 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">Export Data</h3>
-              <p className="text-sm text-gray-600">
-                Download your client data as JSON
-              </p>
+              <p className="text-sm text-gray-600">Download your client data as JSON</p>
             </div>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -59,13 +56,11 @@ export const SettingsPage: React.FC = () => {
               Export
             </motion.button>
           </div>
-
+          
           <div className="flex items-center justify-between pt-4 border-t border-gray-200">
             <div>
               <h3 className="font-semibold text-gray-900 mb-1">Clear All Data</h3>
-              <p className="text-sm text-gray-600">
-                Permanently delete all clients
-              </p>
+              <p className="text-sm text-gray-600">Permanently delete all clients</p>
             </div>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -83,7 +78,7 @@ export const SettingsPage: React.FC = () => {
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
         <h3 className="font-semibold text-blue-900 mb-2">About ClientPilot</h3>
         <p className="text-sm text-blue-800">
-          ClientPilot v1.0 — A professional client management dashboard for freelancers and small teams.
+          ClientPilot v1.0 - A professional client management dashboard for freelancers and small teams.
           All data is stored locally in your browser.
         </p>
       </div>

@@ -36,11 +36,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isO
       <motion.aside
         initial={{ x: -280 }}
         animate={{ x: isOpen ? 0 : -280 }}
-        className="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col lg:translate-x-0"
+        className="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col lg:translate-x-0"
       >
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-blue-600 dark:text-blue-400">ClientPilot</h1>
-          <button onClick={onClose} className="lg:hidden text-gray-500 hover:text-gray-700 dark:text-gray-400">
+        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-blue-600">ClientPilot</h1>
+          <button onClick={onClose} className="lg:hidden text-gray-500 hover:text-gray-700">
             <X size={24} />
           </button>
         </div>
@@ -57,8 +57,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isO
               }}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 currentPage === item.id
-                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                  : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-blue-100 text-blue-600'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
             >
               <item.icon size={20} />
@@ -67,8 +67,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentPage, onPageChange, isO
           ))}
         </nav>
 
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
+        <div className="p-4 border-t border-gray-200">
+          <div className="text-xs text-gray-500 text-center">
             © 2024 ClientPilot
           </div>
         </div>
